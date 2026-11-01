@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 from urllib.parse import urlparse
+from src.registry import RegistryError, get_dependencies
 
 
 def parse_args():
@@ -39,17 +40,32 @@ def parse_args():
     return args
 
 
+
 def main():
-    """Выводит конфигурацию программы."""
+    """Выводит прямые зависимости npm-пакета."""
     args = parse_args()
 
-    print("Параметры запуска:")
-    print("Пакет:", args.package)
-    print("Источник:", args.source)
-    print("Тестовый режим:", args.test)
-    print("Версия:", args.version)
-    print("Максимальная глубина:", args.depth)
-    print("Фильтр:", args.exclude)
+    if args.test:
+        print("Тестовый режим будет добавлен на этапе 3")
+        return
+
+    try:
+        dependencies = get_dependencies(
+            args.source,
+            args.package,
+            args.version,
+        )
+    except RegistryError as error:
+        print("Ошибка:", error)
+        return
+
+    print(f"Зависимости {args.package}@{args.version}:")
+
+    if not dependencies:
+        print("Прямых зависимостей нет")
+
+    for name, version in dependencies.items():
+        print(f"{name}: {version}")
 
 
 if __name__ == "__main__":
