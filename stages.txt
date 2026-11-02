@@ -1,0 +1,59 @@
+ЭТАП 1
+
+1. Корректный запуск со всеми параметрами:
+
+python -m src.main --package A --source fixtures/chain.json --test --version 1.0.0 --depth 3 --exclude C
+
+2. Проверка отрицательной глубины:
+
+python -m src.main --package A --source fixtures/chain.json --test --version 1.0.0 --depth -3
+
+3. Проверка отсутствующего тестового файла:
+
+python -m src.main --package A --source fixtures/unknown.json --test --version 1.0.0
+
+4. Проверка некорректного URL:
+
+python -m src.main --package express --source invalid-url --version 4.21.2
+
+5. Проверка отсутствующего обязательного параметра:
+
+python -m src.main --package A --source fixtures/chain.json --test
+
+
+ЭТАП 2
+
+1. Пакет is-odd версии 3.0.1 (1 зависимость):
+
+python -m src.main --package is-odd --source https://registry.npmjs.org --version 3.0.1
+
+2. Пакет morgan версии 1.10.0 (5 зависимостей):
+
+python -m src.main --package morgan --source https://registry.npmjs.org --version 1.10.0
+
+3. Пакет body-parser версии 1.20.3 (12 зависимостей):
+
+python -m src.main --package body-parser --source https://registry.npmjs.org --version 1.20.3
+
+4. Проверка несуществующего пакета (HTTP 404):
+
+python -m src.main --package nonexistent-package-abc-123456 --source https://registry.npmjs.org --version 1.0.0
+
+5. Проверка несуществующей версии пакета (HTTP 404):
+
+python -m src.main --package is-odd --source https://registry.npmjs.org --version 999.0.0
+
+
+========== GIT И ТЕСТЫ ==========
+
+1. Просмотр истории коммитов:
+
+git log --oneline
+
+2. Проверка состояния репозитория:
+
+git status
+
+3. Запуск автоматических тестов:
+
+python -m unittest discover -s tests -v
