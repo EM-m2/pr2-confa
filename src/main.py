@@ -1,4 +1,3 @@
-
 import argparse
 from pathlib import Path
 from urllib.parse import urlparse
@@ -6,6 +5,7 @@ from urllib.parse import urlparse
 from src.graph import build_graph, load_fixture
 from src.registry import RegistryError, get_children
 
+from src.reverse import find_reverse_dependencies
 
 def parse_args():
     """Получает и проверяет параметры запуска."""
@@ -19,6 +19,8 @@ def parse_args():
     parser.add_argument("--version", required=True)
     parser.add_argument("--depth", type=int, default=2)
     parser.add_argument("--exclude", default="")
+    parser.add_argument("--reverse", action="store_true")
+    parser.add_argument("--target", default=None)
 
     args = parser.parse_args()
 
@@ -42,6 +44,9 @@ def parse_args():
         except ValueError:
             parser.error("Некорректный URL репозитория")
 
+    if args.target is not None and not args.target.strip():
+        parser.error("Имя целевого пакета не может быть пустым")
+
     return args
 
 
@@ -64,11 +69,61 @@ def prepare_source(args):
     return f"{args.package}@{args.version}", npm_children
 
 
+def show_reverse(args):
+    """Выводит обратные зависимости заданного пакета."""
+    if args.test:
+        graph = load_fixture(args.source)
+        targets = [args.target or args.package]
+    else:
+        if not args.target:
+            raise ValueError("Для npm необходимо указать --target")
+
+        root, get_children_func = prepare_source(args)
+
+        graph, _ = build_graph(
+            root,
+            get_children_func,
+            args.depth,
+            args.exclude,
+        )
+
+        targets = [
+            node for node in graph
+            if node.rsplit("@", 1)[0] == args.target
+        ]
+
+        if not targets:
+            raise ValueError("Целевой пакет не найден в графе")
+
+    result = set()
+
+    for target in targets:
+        result.update(
+            find_reverse_dependencies(
+                graph, target, args.depth, args.exclude
+            )
+        )
+
+    result.difference_update(targets)
+
+    print(f"Обратные зависимости {args.target or args.package}:")
+
+    if result:
+        for package in sorted(result):
+            print(package)
+    else:
+        print("Не найдены")
+
+
 def main():
-    """Строит и выводит граф зависимостей."""
+    """Выполняет анализ зависимостей пакетов."""
     args = parse_args()
 
     try:
+        if args.reverse:
+            show_reverse(args)
+            return
+
         root, get_children_func = prepare_source(args)
 
         graph, cycles = build_graph(
@@ -93,6 +148,7 @@ def main():
 
         for start, end in cycles:
             print(f"{start} -> {end}")
+
 
 
 if __name__ == "__main__":

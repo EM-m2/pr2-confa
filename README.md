@@ -60,3 +60,48 @@ python -m src.main --package A --source fixtures/cycle.json --test --version 1.0
 
 python -m src.main --package A --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --exclude C
 
+
+## Этап 4. Обратные зависимости
+
+Реализован режим поиска обратных зависимостей.
+
+Обратные зависимости — пакеты, которые прямо или
+транзитивно зависят от заданного пакета.
+
+Для поиска направления связей графа инвертируются,
+после чего используется рекурсивный DFS из этапа 3.
+
+### Запуск
+
+Для включения режима используется параметр --reverse.
+
+Пример:
+
+python -m src.main --package D --source fixtures/chain.json --test --version 1.0.0 --depth 3 --reverse
+
+### Ручная проверка
+
+Обычный граф:
+
+python -m src.main --package D --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --reverse
+
+Ограничение глубины:
+
+python -m src.main --package D --source fixtures/chain.json --test --version 1.0.0 --depth 1 --reverse
+
+Фильтрация:
+
+python -m src.main --package D --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --exclude B --reverse
+
+Циклические зависимости:
+
+python -m src.main --package A --source fixtures/cycle.json --test --version 1.0.0 --depth 3 --reverse
+
+### Реальный npm Registry
+
+В обычном режиме параметр --package задаёт начальный
+пакет для построения графа, а --target — пакет,
+обратные зависимости которого нужно найти.
+
+Поиск обратных зависимостей ограничивается
+исследованным графом, а не всем реестром npm.

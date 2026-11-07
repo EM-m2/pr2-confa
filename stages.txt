@@ -83,3 +83,25 @@ python -m src.main --package A --source fixtures/diamond.json --test --version 1
 
 Реальный пакет
 python -m src.main --package is-odd --source https://registry.npmjs.org --version 3.0.1 --depth 2
+
+ЭТАП 4
+Проверка
+python -m src.main --package D --source fixtures/chain.json --test --version 1.0.0 --depth 3 --reverse
+
+Ограничение глубины
+python -m src.main --package D --source fixtures/chain.json --test --version 1.0.0 --depth 1 --reverse
+
+Граф с несколькими ветвями
+python -m src.main --package D --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --reverse
+
+Фильтр пакетов
+python -m src.main --package D --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --exclude B --reverse
+
+Циклическая зависимость
+python -m src.main --package A --source fixtures/cycle.json --test --version 1.0.0 --depth 3 --reverse
+
+Отсутствие обратных связей
+python -m src.main --package A --source fixtures/chain.json --test --version 1.0.0 --depth 3 --reverse
+
+Реальный пакет
+python -m src.main --package is-odd --source https://registry.npmjs.org --version 3.0.1 --depth 2 --reverse --target is-number
