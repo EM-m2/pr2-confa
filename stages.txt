@@ -105,3 +105,25 @@ python -m src.main --package A --source fixtures/chain.json --test --version 1.0
 
 Реальный пакет
 python -m src.main --package is-odd --source https://registry.npmjs.org --version 3.0.1 --depth 2 --reverse --target is-number
+
+
+ЭТАП 5
+Визуализация последовательного графа
+python -m src.main --package A --source fixtures/chain.json --test --version 1.0.0 --depth 3 --visualize
+
+Визуализация разветвлённого графа
+python -m src.main --package A --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --visualize
+
+Циклический граф
+python -m src.main --package C --source fixtures/cycle.json --test --version 1.0.0 --depth 3 --visualize
+
+Ограничение глубины
+python -m src.main --package A --source fixtures/chain.json --test --version 1.0.0 --depth 1 --visualize
+
+Проверка фильтрации
+python -m src.main --package A --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --exclude C --visualize
+
+Проверка 3-х реальных пакетов
+python -m src.main --package is-odd --source https://registry.npmjs.org --version 3.0.1 --depth 2 --visualize
+python -m src.main --package morgan --source https://registry.npmjs.org --version 1.10.0 --depth 2 --visualize
+python -m src.main --package express --source https://registry.npmjs.org --version 4.21.2 --depth 1 --visualize

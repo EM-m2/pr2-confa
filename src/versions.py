@@ -81,10 +81,19 @@ def matches_token(version, token):
     return version == base_tuple(token)
 
 
+
 def matches_requirement(version, requirement):
-    """Проверяет диапазон с условиями AND и OR"""
-    if not requirement.strip():
-        raise ValueError("Пустое требование версии")
+    """Проверяет диапазон с условиями AND и OR."""
+    requirement = requirement.strip()
+
+    if not requirement:
+        return True
+
+    requirement = re.sub(
+        r"(>=|<=|>|<|=|\^|~)\s+(?=\d)",
+        r"\1",
+        requirement,
+    )
 
     return any(
         all(

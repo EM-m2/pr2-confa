@@ -1,11 +1,10 @@
 import argparse
 from pathlib import Path
 from urllib.parse import urlparse
-
 from src.graph import build_graph, load_fixture
 from src.registry import RegistryError, get_children
-
 from src.reverse import find_reverse_dependencies
+from src.visualization import visualize
 
 def parse_args():
     """Получает и проверяет параметры запуска."""
@@ -21,6 +20,7 @@ def parse_args():
     parser.add_argument("--exclude", default="")
     parser.add_argument("--reverse", action="store_true")
     parser.add_argument("--target", default=None)
+    parser.add_argument("--visualize", action="store_true")
 
     args = parser.parse_args()
 
@@ -115,8 +115,24 @@ def show_reverse(args):
         print("Не найдены")
 
 
+def show_graph(root, graph, cycles):
+    """Выводит граф зависимостей в терминал."""
+    print(f"Граф зависимостей: {root}")
+
+    for package, children in graph.items():
+        text = ", ".join(children) if children else "нет"
+        print(f"{package} -> {text}")
+
+    if cycles:
+        print("Найдены циклы:")
+
+        for start, end in cycles:
+            print(f"{start} -> {end}")
+
+
+
 def main():
-    """Выполняет анализ зависимостей пакетов."""
+    """Анализирует и визуализирует зависимости."""
     args = parse_args()
 
     try:
@@ -133,22 +149,20 @@ def main():
             args.exclude,
         )
 
+        show_graph(root, graph, cycles)
+
+        if args.visualize:
+            text, source_path, html_path = visualize(
+                graph, root
+            )
+
+            print("\nMermaid:")
+            print(text)
+            print("Файл Mermaid:", source_path)
+            print("Изображение в браузере:", html_path)
+
     except (RegistryError, OSError, ValueError, RecursionError) as error:
         print("Ошибка:", error)
-        return
-
-    print(f"Граф зависимостей: {root}")
-
-    for package, children in graph.items():
-        text = ", ".join(children) if children else "нет"
-        print(f"{package} -> {text}")
-
-    if cycles:
-        print("Найдены циклы:")
-
-        for start, end in cycles:
-            print(f"{start} -> {end}")
-
 
 
 if __name__ == "__main__":
