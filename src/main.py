@@ -1,7 +1,10 @@
+
 import argparse
 from pathlib import Path
 from urllib.parse import urlparse
-from src.registry import RegistryError, get_dependencies
+
+from src.graph import build_graph, load_fixture
+from src.registry import RegistryError, get_children
 
 
 def parse_args():
@@ -32,40 +35,64 @@ def parse_args():
         if not Path(args.source).is_file():
             parser.error("Файл тестового репозитория не найден")
     else:
-        url = urlparse(args.source)
-
-        if url.scheme not in ("http", "https") or not url.netloc:
+        try:
+            url = urlparse(args.source)
+            if url.scheme not in ("http", "https") or not url.netloc:
+                parser.error("Некорректный URL репозитория")
+        except ValueError:
             parser.error("Некорректный URL репозитория")
 
     return args
 
 
+def prepare_source(args):
+    """Подготавливает источник зависимостей для DFS."""
+    if args.test:
+        fixture = load_fixture(args.source)
+
+        if args.package not in fixture:
+            raise ValueError(
+                f"Пакет {args.package} отсутствует в тестовом графе"
+            )
+
+        return args.package, fixture.__getitem__
+
+    def npm_children(package_id):
+        """Получает зависимости из реального npm Registry."""
+        return get_children(args.source, package_id)
+
+    return f"{args.package}@{args.version}", npm_children
+
 
 def main():
-    """Выводит прямые зависимости npm-пакета."""
+    """Строит и выводит граф зависимостей."""
     args = parse_args()
 
-    if args.test:
-        print("Тестовый режим будет добавлен на этапе 3")
-        return
-
     try:
-        dependencies = get_dependencies(
-            args.source,
-            args.package,
-            args.version,
+        root, get_children_func = prepare_source(args)
+
+        graph, cycles = build_graph(
+            root,
+            get_children_func,
+            args.depth,
+            args.exclude,
         )
-    except RegistryError as error:
+
+    except (RegistryError, OSError, ValueError, RecursionError) as error:
         print("Ошибка:", error)
         return
 
-    print(f"Зависимости {args.package}@{args.version}:")
+    print(f"Граф зависимостей: {root}")
 
-    if not dependencies:
-        print("Прямых зависимостей нет")
+    for package, children in graph.items():
+        text = ", ".join(children) if children else "нет"
+        print(f"{package} -> {text}")
 
-    for name, version in dependencies.items():
-        print(f"{name}: {version}")
+    if cycles:
+        print("Найдены циклы:")
+
+        for start, end in cycles:
+            print(f"{start} -> {end}")
 
 
 if __name__ == "__main__":

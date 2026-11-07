@@ -26,3 +26,37 @@ python3 -m unittest discover -s tests -v
 Программа извлекает прямые зависимости указанной версии
 из JSON-ответа npm Registry. Добавлена обработка ошибок
 подключения и некорректных ответов.
+
+
+
+## Этап 3. Построение графа зависимостей
+
+Реализован рекурсивный алгоритм DFS для построения
+графа транзитивных зависимостей npm-пакетов.
+
+Поддерживаются:
+- ограничение глубины обхода;
+- фильтрация пакетов по подстроке;
+- обнаружение циклических зависимостей;
+- работа с реальным npm Registry;
+- тестовый режим на основе JSON-файлов.
+
+Тестовые графы содержат пакеты с именами из
+заглавных латинских букв.
+
+### Проверка обычного графа
+
+python -m src.main --package A --source fixtures/diamond.json --test --version 1.0.0 --depth 3
+
+### Проверка ограничения глубины
+
+python -m src.main --package A --source fixtures/diamond.json --test --version 1.0.0 --depth 1
+
+### Проверка циклических зависимостей
+
+python -m src.main --package A --source fixtures/cycle.json --test --version 1.0.0 --depth 5
+
+### Проверка фильтрации
+
+python -m src.main --package A --source fixtures/diamond.json --test --version 1.0.0 --depth 3 --exclude C
+
